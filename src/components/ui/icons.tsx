@@ -37,16 +37,16 @@ const PATHS = {
 export function Icon({
   name,
   size = 20,
-  fill = false,
+  filled = false,
   ...props
-}: { name: IconName; size?: number; fill?: boolean } & Omit<SVGProps<SVGSVGElement>, "name">) {
+}: { name: IconName; size?: number; filled?: boolean } & Omit<SVGProps<SVGSVGElement>, "name" | "fill">) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill={fill ? "currentColor" : "none"}
+      fill={filled ? "currentColor" : "none"}
       stroke="currentColor"
       strokeWidth={2}
       strokeLinecap="round"

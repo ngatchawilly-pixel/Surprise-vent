@@ -277,7 +277,7 @@ export function ProductConfigurator({ product, whatsappNumber }: Props) {
               if (addToCart()) router.push("/commande");
             }}
           >
-            <Icon name="heart" size={18} fill /> {soldOut ? "Indisponible" : `Commander · ${formatFcfa(total)}`}
+            <Icon name="heart" size={18} filled /> {soldOut ? "Indisponible" : `Commander · ${formatFcfa(total)}`}
           </button>
           <button
             type="button"
