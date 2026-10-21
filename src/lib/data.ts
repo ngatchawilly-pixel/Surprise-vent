@@ -74,7 +74,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
   }
   if (filters.q?.trim()) {
     // Échappement des caractères spéciaux du filtre PostgREST.
-    const term = filters.q.trim().replace(/[%,()*\]/g, " ");
+    const term = filters.q.trim().replace(/[%,()*\\]/g, " ");
     query = query.or(`name.ilike.%${term}%,tagline.ilike.%${term}%,description.ilike.%${term}%`);
   }
 
