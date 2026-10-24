@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/data";
 import { whatsappLink } from "@/lib/format";
-import { Icon } from "@/components/ui/icons";
+import { Icon, WhatsAppIcon } from "@/components/ui/icons";
 import { CartButton } from "./cart-button";
 import { MobileNav, type NavItem } from "./mobile-nav";
 
@@ -70,10 +70,11 @@ export async function SiteHeader() {
             )}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-whatsapp !hidden !min-h-11 !rounded-full !px-4 md:!inline-flex"
+            aria-label="Discuter sur WhatsApp"
+            title="Discuter sur WhatsApp"
+            className="hidden h-10 w-10 items-center justify-center rounded-full bg-[#e9fbef] text-whatsapp transition-colors hover:bg-whatsapp hover:text-white md:flex"
           >
-            <Icon name="chat" size={18} />
-            WhatsApp
+            <WhatsAppIcon size={20} />
           </a>
           <CartButton />
           <MobileNav items={NAV} />

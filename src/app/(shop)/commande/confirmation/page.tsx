@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ClearCart } from "@/components/shop/clear-cart";
 import { OrderSummary } from "@/components/shop/order-summary";
-import { Icon } from "@/components/ui/icons";
+import { Icon, WhatsAppIcon } from "@/components/ui/icons";
 import { getSettings } from "@/lib/data";
 import { formatFcfa, whatsappLink } from "@/lib/format";
 import { manualMobileMoney } from "@/lib/payments";
@@ -53,7 +53,7 @@ export default async function ConfirmationPage({ searchParams }: { searchParams:
             ))}
           </ol>
           <a
-            className="btn btn-whatsapp mt-5"
+            className="btn btn-sm btn-wa-soft mt-5"
             target="_blank"
             rel="noopener noreferrer"
             href={whatsappLink(
@@ -61,7 +61,7 @@ export default async function ConfirmationPage({ searchParams }: { searchParams:
               `Bonjour, voici ma confirmation de paiement pour la commande ${order.number} (${formatFcfa(order.deposit_due || order.total)}).`,
             )}
           >
-            <Icon name="chat" size={18} /> Envoyer ma confirmation sur WhatsApp
+            <WhatsAppIcon size={18} /> Envoyer ma confirmation sur WhatsApp
           </a>
         </section>
       )}

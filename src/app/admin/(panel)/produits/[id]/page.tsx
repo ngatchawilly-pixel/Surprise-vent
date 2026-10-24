@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteProduct, saveProduct } from "@/actions/admin";
+import { ActionForm, SubmitButton } from "@/components/admin/action-form";
 import { requireAdmin } from "@/lib/auth";
 import type { Addon, Category, Product, Variant } from "@/lib/types";
 
@@ -40,7 +41,7 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
       <Link href="/admin/produits" className="text-sm text-ink-soft hover:text-primary">← Produits</Link>
       <h1 className="mt-2 text-3xl font-semibold">{isNew ? "Nouveau produit" : product!.name}</h1>
 
-      <form action={saveProduct} encType="multipart/form-data" className="card mt-6 space-y-5 p-6">
+      <ActionForm action={saveProduct} className="card mt-6 space-y-5 p-6">
         <input type="hidden" name="id" value={product?.id ?? ""} />
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -152,15 +153,28 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
               ))}
             </ul>
           )}
-          <input type="file" name="images_new" multiple accept="image/jpeg,image/png,image/webp,image/avif" className="input !py-2.5" aria-label="Ajouter des photos" />
-          <p className="mt-1 text-xs text-ink-soft">JPG, PNG, WebP ou AVIF — 5 Mo maximum par photo. La première photo est la photo principale.</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="images_new" className="text-sm font-semibold">📁 Depuis mon ordinateur</label>
+              <input id="images_new" type="file" name="images_new" multiple accept="image/jpeg,image/png,image/webp,image/avif" className="input mt-1 !py-2.5" />
+            </div>
+            <div>
+              <label htmlFor="images_url" className="text-sm font-semibold">🔗 Depuis un lien (une adresse par ligne)</label>
+              <textarea id="images_url" name="images_url" rows={3} className="input mt-1 !min-h-[48px] text-sm" placeholder={"https://exemple.com/photo.jpg"} spellCheck={false} />
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-ink-soft">
+            JPG, PNG, WebP ou AVIF — 5 Mo maximum, 8 photos par produit. La première photo est la photo principale.
+            Pour un lien, collez l&apos;adresse <strong>directe de l&apos;image</strong> (clic droit sur l&apos;image → « Copier l&apos;adresse de l&apos;image ») : elle est copiée sur votre site, elle ne disparaîtra pas si l&apos;original est supprimé.
+            Utilisez uniquement des images dont vous avez le droit de vous servir.
+          </p>
         </fieldset>
 
         <div className="flex flex-wrap gap-3 border-t border-surface-container pt-5">
-          <button className="btn btn-primary">Enregistrer</button>
+          <SubmitButton>Enregistrer</SubmitButton>
           <Link href="/admin/produits" className="btn btn-ghost">Annuler</Link>
         </div>
-      </form>
+      </ActionForm>
 
       {!isNew && (
         <form action={deleteProduct} className="mt-6">

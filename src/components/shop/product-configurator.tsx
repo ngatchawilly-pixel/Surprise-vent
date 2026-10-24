@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
-import { Icon } from "@/components/ui/icons";
+import { Icon, WhatsAppIcon } from "@/components/ui/icons";
 import { formatFcfa, whatsappLink } from "@/lib/format";
 import { MIN_CUSTOM_AMOUNT, priceLabel, unitPrice } from "@/lib/rules";
 import { createClient } from "@/lib/supabase/client";
@@ -293,7 +293,7 @@ export function ProductConfigurator({ product, whatsappNumber }: Props) {
             <Icon name="bag" size={18} /> Ajouter au panier
           </button>
           <a
-            className="btn btn-whatsapp"
+            className="btn btn-sm btn-wa-soft"
             target="_blank"
             rel="noopener noreferrer"
             href={whatsappLink(
@@ -301,7 +301,7 @@ export function ProductConfigurator({ product, whatsappNumber }: Props) {
               `Bonjour Surprise évent & haid, je souhaite commander ${product.name}. Je voudrais avoir plus d'informations concernant la disponibilité et la livraison.`,
             )}
           >
-            <Icon name="chat" size={18} /> Sur WhatsApp
+            <WhatsAppIcon size={18} /> Demander sur WhatsApp
           </a>
         </div>
 

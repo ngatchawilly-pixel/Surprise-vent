@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
+import { IMAGE_TYPES, MAX_IMAGE_BYTES, UserError, fetchRemoteImage } from "@/lib/image-import";
 import { slugify } from "@/lib/slug";
 
 // Chaque action revérifie le rôle admin : un layout ne protège pas les Server Actions.
@@ -85,9 +86,9 @@ const productSchema = z.object({
   sort_order: intField(),
 });
 
-const IMAGE_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif" };
+const MAX_IMAGES = 8;
 
-export async function saveProduct(formData: FormData) {
+async function persistProduct(formData: FormData) {
   const { supabase } = await requireAdmin();
 
   const p = productSchema.parse({
@@ -105,17 +106,34 @@ export async function saveProduct(formData: FormData) {
     sort_order: formData.get("sort_order") || 0,
   });
 
-  // Images conservées (ordre du formulaire) + nouvelles images téléversées.
+  // Images : conservées + fichiers téléversés + images importées depuis un lien (copiées dans notre stockage).
   const images = formData.getAll("images_keep").map(String).filter(Boolean);
+  const store = async (bytes: Blob | Uint8Array, type: string, ext: string) => {
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const body = bytes instanceof Uint8Array ? new Blob([bytes as BlobPart], { type }) : bytes;
+    const { error } = await supabase.storage.from("product-images").upload(path, body, { contentType: type });
+    if (error) throw new UserError(`Envoi de l'image impossible : ${error.message}`);
+    images.push(supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl);
+  };
+
   for (const file of formData.getAll("images_new")) {
     if (!(file instanceof File) || file.size === 0) continue;
     const ext = IMAGE_TYPES[file.type];
-    if (!ext || file.size > 5 * 1024 * 1024) throw new Error("Image refusée (JPG, PNG, WebP ou AVIF, 5 Mo max).");
-    const path = `${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
-    if (error) throw new Error(error.message);
-    images.push(supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl);
+    if (!ext) throw new UserError(`« ${file.name} » : format non accepté (JPG, PNG, WebP ou AVIF).`);
+    if (file.size > MAX_IMAGE_BYTES) throw new UserError(`« ${file.name} » : image trop lourde (5 Mo maximum).`);
+    await store(file, file.type, ext);
   }
+
+  const links = String(formData.get("images_url") ?? "")
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  for (const link of [...new Set(links)]) {
+    const { bytes, type, ext } = await fetchRemoteImage(link);
+    await store(bytes, type, ext);
+  }
+
+  if (images.length > MAX_IMAGES) throw new UserError(`${MAX_IMAGES} photos maximum par produit.`);
 
   const composition = String(formData.get("composition") ?? "")
     .split("\n")
@@ -145,7 +163,7 @@ export async function saveProduct(formData: FormData) {
     ? supabase.from("products").update(row).eq("id", p.id).select("id").single()
     : supabase.from("products").insert(row).select("id").single();
   const { data, error } = await query;
-  if (error) throw new Error(error.code === "23505" ? "Ce nom d'URL (slug) existe déjà." : error.message);
+  if (error) throw new UserError(error.code === "23505" ? "Cette adresse (slug) existe déjà : choisissez-en une autre." : error.message);
 
   // Formules : une ligne par formule « Nom | Prix | Description (| recommandé) ».
   const variantLines = String(formData.get("variants") ?? "")
@@ -159,14 +177,14 @@ export async function saveProduct(formData: FormData) {
       return {
         product_id: data.id,
         name,
-        price: Number.parseInt(price.replace(/\D/g, ""), 10) || 0,
+        price: Number.parseInt((price ?? "").replace(/\D/g, ""), 10) || 0,
         description: description || null,
         is_recommended: /^(oui|reco|recommand)/i.test(rec ?? ""),
         sort_order: (i + 1) * 10,
       };
     });
     const { error: vErr } = await supabase.from("product_variants").insert(variants);
-    if (vErr) throw new Error(vErr.message);
+    if (vErr) throw new UserError(`Formules : ${vErr.message}`);
   }
 
   // Options complémentaires rattachées.
@@ -175,7 +193,22 @@ export async function saveProduct(formData: FormData) {
   if (addonIds.length) {
     await supabase.from("product_addons").insert(addonIds.map((addon_id) => ({ product_id: data.id, addon_id })));
   }
+}
 
+export type FormState = { error?: string } | undefined;
+
+/** Enregistre un produit. Les erreurs attendues (lien d'image invalide, doublon…) reviennent au formulaire. */
+export async function saveProduct(_prev: FormState, formData: FormData): Promise<FormState> {
+  try {
+    await persistProduct(formData);
+  } catch (e) {
+    if (e instanceof UserError) return { error: e.message };
+    if (e instanceof z.ZodError) {
+      const fields = [...new Set(e.issues.map((i) => String(i.path[0] ?? "")))].filter(Boolean).join(", ");
+      return { error: `Vérifiez les champs suivants : ${fields || "formulaire"}.` };
+    }
+    throw e;
+  }
   refreshCatalog();
   redirect("/admin/produits");
 }

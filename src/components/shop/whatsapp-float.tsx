@@ -1,7 +1,8 @@
 import { getSettings } from "@/lib/data";
 import { whatsappLink } from "@/lib/format";
-import { Icon } from "@/components/ui/icons";
+import { WhatsAppIcon } from "@/components/ui/icons";
 
+/** Bouton flottant compact : pastille ronde, libellé au survol/focus (bureau). */
 export async function WhatsAppFloat() {
   const s = await getSettings();
   return (
@@ -12,11 +13,18 @@ export async function WhatsAppFloat() {
       )}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Commander sur WhatsApp"
-      className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full bg-whatsapp px-4 py-3.5 text-sm font-bold text-white shadow-raised transition-transform hover:scale-105 sm:bottom-6 sm:right-6 sm:px-5"
+      aria-label="Discuter sur WhatsApp"
+      className="group fixed bottom-4 right-4 z-40 flex items-center sm:bottom-6 sm:right-6"
     >
-      <Icon name="chat" size={22} />
-      <span className="hidden sm:inline">Commander sur WhatsApp</span>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none mr-2 hidden origin-right scale-95 rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-card transition-all duration-200 group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100 md:block"
+      >
+        Discuter sur WhatsApp
+      </span>
+      <span className="relative flex h-12 w-12 items-center justify-center rounded-full bg-whatsapp text-white shadow-raised ring-4 ring-white/80 transition-transform duration-200 group-hover:scale-105">
+        <WhatsAppIcon size={26} />
+      </span>
     </a>
   );
 }

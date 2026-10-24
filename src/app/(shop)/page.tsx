@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductImage } from "@/components/shop/product-image";
-import { Icon, type IconName } from "@/components/ui/icons";
+import { Icon, WhatsAppIcon, type IconName } from "@/components/ui/icons";
 import { getApprovedReviews, getCategories, getProducts, getSettings } from "@/lib/data";
 import { formatFcfa, whatsappLink } from "@/lib/format";
 
@@ -67,9 +67,9 @@ export default async function HomePage() {
                 href={whatsappLink(settings.whatsapp_number, "Bonjour Surprise évent & haid, je souhaite commander une surprise.")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-whatsapp"
+                className="btn btn-sm btn-wa-soft self-center"
               >
-                <Icon name="chat" size={20} /> {settings.phone_display}
+                <WhatsAppIcon size={18} /> {settings.phone_display}
               </a>
             </div>
             <ul className="mt-8 grid max-w-xl gap-3 text-sm text-ink-soft sm:grid-cols-3">
@@ -167,9 +167,9 @@ export default async function HomePage() {
             href={whatsappLink(settings.whatsapp_number, "Bonjour, je souhaite une prestation express.")}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-whatsapp shrink-0"
+            className="btn btn-sm btn-wa-soft shrink-0"
           >
-            <Icon name="chat" size={18} /> Demander l&apos;express
+            <WhatsAppIcon size={18} /> Demander l&apos;express
           </a>
         </div>
       </section>
