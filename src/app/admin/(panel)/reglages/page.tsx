@@ -1,4 +1,5 @@
-import { addZone, saveSettings, saveZoneFees } from "@/actions/admin";
+import { addZone, deleteZone, saveSettings, saveZoneFees } from "@/actions/admin";
+import { Icon } from "@/components/ui/icons";
 import { requireAdmin } from "@/lib/auth";
 import { DEFAULT_SETTINGS } from "@/lib/data";
 import { CITY_LABEL } from "@/lib/format";
@@ -36,14 +37,45 @@ export default async function SettingsPage() {
         <h2 className="font-serif text-xl font-semibold">Frais de livraison par quartier</h2>
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {((zones ?? []) as DeliveryZone[]).map((z) => (
-            <li key={z.id} className="flex items-center justify-between gap-3 rounded-lg bg-surface-low px-3 py-2">
+            <li key={z.id} className="flex items-center gap-2 rounded-lg bg-surface-low px-3 py-2">
               <input type="hidden" name="zone_id" value={z.id} />
-              <label htmlFor={`fee_${z.id}`} className="text-sm"><strong>{z.district}</strong> <span className="text-ink-soft">· {CITY_LABEL[z.city]}</span></label>
-              <input id={`fee_${z.id}`} name={`fee_${z.id}`} type="number" min={0} step={500} defaultValue={z.fee} className="input !min-h-10 !w-28 text-right" />
+              <div className="min-w-0 flex-1">
+                {z.is_other ? (
+                  <p className="text-sm"><strong>{z.district}</strong> <span className="text-ink-soft">· {CITY_LABEL[z.city]}</span></p>
+                ) : (
+                  <>
+                    <label htmlFor={`district_${z.id}`} className="sr-only">Nom du quartier ({CITY_LABEL[z.city]})</label>
+                    <input id={`district_${z.id}`} name={`district_${z.id}`} defaultValue={z.district} minLength={2} maxLength={60} required className="input !min-h-10 !py-1.5 text-sm font-semibold" />
+                    <span className="text-xs text-ink-soft">{CITY_LABEL[z.city]}</span>
+                  </>
+                )}
+              </div>
+              <label htmlFor={`fee_${z.id}`} className="sr-only">Frais de livraison {z.district}</label>
+              <input id={`fee_${z.id}`} name={`fee_${z.id}`} type="number" min={0} step={500} defaultValue={z.fee} className="input !min-h-10 !w-24 shrink-0 text-right" />
+              {z.is_other ? (
+                <span className="w-9 shrink-0" aria-hidden="true" />
+              ) : (
+                <button
+                  type="submit"
+                  formAction={deleteZone}
+                  formNoValidate
+                  name="delete_id"
+                  value={z.id}
+                  aria-label={`Supprimer le quartier ${z.district}`}
+                  title="Supprimer ce quartier"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-soft hover:bg-error-soft hover:text-danger"
+                >
+                  <Icon name="trash" size={16} />
+                </button>
+              )}
             </li>
           ))}
         </ul>
-        <button className="btn btn-primary mt-5">Enregistrer les frais</button>
+        <p className="mt-3 text-xs text-ink-soft">
+          Modifiez un nom ou un tarif puis cliquez sur « Enregistrer ». La corbeille supprime le quartier immédiatement.
+          Les lignes « Autres quartiers » ne peuvent pas être supprimées : elles servent de tarif par défaut.
+        </p>
+        <button className="btn btn-primary mt-5">Enregistrer les noms et les frais</button>
       </form>
 
       <form action={addZone} className="card grid gap-4 p-6 sm:grid-cols-4">

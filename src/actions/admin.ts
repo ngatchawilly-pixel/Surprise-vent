@@ -267,9 +267,24 @@ export async function saveZoneFees(formData: FormData) {
   const ids = formData.getAll("zone_id").map(String);
   for (const id of ids) {
     const fee = intField().parse(formData.get(`fee_${id}`));
-    const { error } = await supabase.from("delivery_zones").update({ fee }).eq("id", id);
-    if (error) throw new Error(error.message);
+    // « Autres quartiers » n'a pas de champ nom : seul le tarif change.
+    const rawName = formData.get(`district_${id}`);
+    const patch: { fee: number; district?: string } = { fee };
+    if (typeof rawName === "string") {
+      patch.district = z.string().trim().min(2).max(60).parse(rawName);
+    }
+    const { error } = await supabase.from("delivery_zones").update(patch).eq("id", id);
+    if (error) throw new Error(error.code === "23505" ? "Deux quartiers ont le même nom dans la même ville." : error.message);
   }
+  refreshCatalog();
+}
+
+export async function deleteZone(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const id = z.string().uuid().parse(formData.get("delete_id"));
+  // Les lignes « Autres quartiers » servent de repli à la commande : on ne les supprime jamais.
+  const { error } = await supabase.from("delivery_zones").delete().eq("id", id).eq("is_other", false);
+  if (error) throw new Error(error.message);
   refreshCatalog();
 }
 
