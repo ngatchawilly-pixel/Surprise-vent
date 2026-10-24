@@ -1,5 +1,7 @@
 import { addZone, deleteZone, saveSettings, saveZoneFees } from "@/actions/admin";
+import { ThemeEditor } from "@/components/admin/theme-editor";
 import { Icon } from "@/components/ui/icons";
+import { themeFromSettings } from "@/lib/theme";
 import { requireAdmin } from "@/lib/auth";
 import { DEFAULT_SETTINGS } from "@/lib/data";
 import { CITY_LABEL } from "@/lib/format";
@@ -16,10 +18,13 @@ export default async function SettingsPage() {
 
   const s: SiteSettings = { ...DEFAULT_SETTINGS };
   for (const r of rows ?? []) (s as unknown as Record<string, unknown>)[r.key] = r.value;
+  const theme = themeFromSettings(Object.fromEntries((rows ?? []).map((r) => [r.key, r.value])));
 
   return (
     <div className="max-w-3xl space-y-8">
       <h1 className="text-3xl font-semibold">Réglages &amp; livraison</h1>
+
+      <ThemeEditor key={`${theme.primary}${theme.secondary}${theme.gold}`} initial={theme} />
 
       <form action={saveSettings} className="card grid gap-4 p-6 sm:grid-cols-2">
         <h2 className="font-serif text-xl font-semibold sm:col-span-2">Informations du site</h2>

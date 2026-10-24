@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
+import { getTheme } from "@/lib/data";
+import { themeCss } from "@/lib/theme";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -38,9 +40,11 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const css = themeCss(await getTheme());
   return (
     <html lang="fr" className={`${playfair.variable} ${jakarta.variable}`}>
+      <head>{css && <style id="site-theme" dangerouslySetInnerHTML={{ __html: css }} />}</head>
       <body>{children}</body>
     </html>
   );

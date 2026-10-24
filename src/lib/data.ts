@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
+import { themeFromSettings, type Theme } from "@/lib/theme";
 import type {
   Addon,
   Category,
@@ -42,6 +43,12 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
   const merged: Record<string, unknown> = { ...DEFAULT_SETTINGS };
   for (const row of data ?? []) merged[row.key] = row.value;
   return merged as unknown as SiteSettings;
+});
+
+/** Couleurs du site (réglées dans l'admin) ; retombe sur le thème d'origine si absentes ou invalides. */
+export const getTheme = cache(async (): Promise<Theme> => {
+  const settings = await getSettings();
+  return themeFromSettings(settings as unknown as Record<string, unknown>);
 });
 
 export const getCategories = cache(async (): Promise<Category[]> => {

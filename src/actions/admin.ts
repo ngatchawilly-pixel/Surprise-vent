@@ -332,3 +332,40 @@ export async function addZone(formData: FormData) {
   if (error) throw new Error(error.code === "23505" ? "Ce quartier existe déjà." : error.message);
   refreshCatalog();
 }
+
+// ───────────── Apparence (couleurs du site) ─────────────
+
+export type ThemeState = { error?: string; saved?: boolean } | undefined;
+
+const themeSchema = z.object({
+  primary: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Couleur principale invalide"),
+  secondary: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Couleur secondaire invalide"),
+  gold: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Couleur dorée invalide"),
+});
+
+export async function saveTheme(_prev: ThemeState, formData: FormData): Promise<ThemeState> {
+  const { supabase } = await requireAdmin();
+  const parsed = themeSchema.safeParse({
+    primary: formData.get("primary"),
+    secondary: formData.get("secondary"),
+    gold: formData.get("gold"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Couleur invalide" };
+
+  const t = parsed.data;
+  const { error } = await supabase.from("settings").upsert([
+    { key: "theme_primary", value: t.primary.toLowerCase() },
+    { key: "theme_secondary", value: t.secondary.toLowerCase() },
+    { key: "theme_gold", value: t.gold.toLowerCase() },
+  ]);
+  if (error) return { error: error.message };
+  refreshCatalog();
+  return { saved: true };
+}
+
+export async function resetTheme(): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from("settings").delete().in("key", ["theme_primary", "theme_secondary", "theme_gold"]);
+  if (error) throw new Error(error.message);
+  refreshCatalog();
+}
