@@ -44,7 +44,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const css = themeCss(await getTheme());
   return (
     <html lang="fr" className={`${playfair.variable} ${jakarta.variable}`}>
-      <head>{css && <style id="site-theme" dangerouslySetInnerHTML={{ __html: css }} />}</head>
+      {/* Ternaire (pas `css && …`) : une chaîne vide dans <head> provoque une erreur d'hydratation. */}
+      {css ? (
+        <head>
+          <style id="site-theme" dangerouslySetInnerHTML={{ __html: css }} />
+        </head>
+      ) : null}
       <body>{children}</body>
     </html>
   );
