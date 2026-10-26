@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { resetTheme, saveTheme } from "@/actions/admin";
-import { contrastRatio, themeVariables, type Theme } from "@/lib/theme";
+import { THEME_PRESETS, contrastRatio, themeVariables, type Theme } from "@/lib/theme";
 
 const FIELDS: { key: keyof Theme; label: string; hint: string }[] = [
   { key: "primary", label: "Couleur principale", hint: "Boutons, prix, liens, bandeau" },
@@ -39,9 +39,39 @@ export function ThemeEditor({ initial }: { initial: Theme }) {
   return (
     <form action={action} className="card p-6">
       <h2 className="font-serif text-xl font-semibold">Apparence · couleurs du site</h2>
-      <p className="mt-1 text-sm text-ink-soft">Choisissez 3 couleurs : les nuances (survol, fonds clairs) sont calculées automatiquement.</p>
+      <p className="mt-1 text-sm text-ink-soft">Choisissez une palette ou 3 couleurs libres : les nuances (survol, fonds clairs) sont calculées automatiquement.</p>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-3">
+      <fieldset className="mt-5">
+        <legend className="label">Palettes proposées (cliquez pour essayer)</legend>
+        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {THEME_PRESETS.map((p) => {
+            const active = p.primary === theme.primary && p.secondary === theme.secondary && p.gold === theme.gold;
+            return (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setTheme({ primary: p.primary, secondary: p.secondary, gold: p.gold })}
+                  className={`flex w-full items-center gap-3 rounded-xl border-2 p-3 text-left transition-colors ${active ? "border-primary-container bg-surface-rose" : "border-surface-container hover:border-outline-soft"}`}
+                >
+                  <span className="flex shrink-0 -space-x-2" aria-hidden="true">
+                    {[p.primary, p.secondary, p.gold].map((c, i) => (
+                      <span key={i} className="h-8 w-8 rounded-full ring-2 ring-white" style={{ background: c }} />
+                    ))}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold leading-tight">{p.name}{active && " ✓"}</span>
+                    <span className="block text-xs leading-snug text-ink-soft">{p.mood}</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="mt-2 text-xs text-ink-soft">Une palette remplit les 3 couleurs ci-dessous : vous pouvez ensuite les ajuster librement. Rien n&apos;est appliqué au site avant « Enregistrer ».</p>
+      </fieldset>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
         {FIELDS.map((f) => (
           <div key={f.key}>
             <label htmlFor={`theme-${f.key}`} className="label">{f.label}</label>
