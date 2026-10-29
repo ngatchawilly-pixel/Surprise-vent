@@ -63,6 +63,8 @@ export interface Product {
   badge: string | null;
   composition: string[];
   is_pack: boolean;
+  /** Le prix inclut déjà le déplacement (packs anniversaire) ; absent tant que la migration 0004 n'est pas appliquée. */
+  delivery_included?: boolean;
   stock: StockStatus;
   is_active: boolean;
   is_featured: boolean;

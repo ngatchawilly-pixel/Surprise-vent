@@ -91,6 +91,7 @@ export function ProductConfigurator({ product, whatsappNumber }: Props) {
       variantName: variant?.name ?? null,
       unitPrice: unit,
       quantity,
+      deliveryIncluded: product.delivery_included ?? false,
       addons: selectedAddons.map((a) => ({ id: a.id, name: a.name, price: a.price })),
       customization: {
         recipient_name: recipient.trim() || undefined,

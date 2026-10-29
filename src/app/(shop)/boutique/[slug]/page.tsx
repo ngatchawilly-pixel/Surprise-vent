@@ -93,6 +93,11 @@ export default async function ProductPage({ params }: { params: Params }) {
             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STOCK_STYLE[product.stock]}`}>
               {STOCK_LABEL[product.stock]}
             </span>
+            {product.delivery_included && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-rose px-3 py-1 text-xs font-semibold text-primary">
+                <Icon name="truck" size={14} /> Déplacement inclus
+              </span>
+            )}
           </div>
           <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">{product.name}</h1>
           {product.tagline && <p className="mt-2 font-serif text-lg italic text-secondary">{product.tagline}</p>}

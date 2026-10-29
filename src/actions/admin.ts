@@ -155,6 +155,8 @@ async function persistProduct(formData: FormData) {
     is_active: formData.get("is_active") === "on",
     is_featured: formData.get("is_featured") === "on",
     is_pack: formData.get("is_pack") === "on",
+    // Envoyé seulement si la colonne existe (migration 0004 appliquée) : le formulaire pose le marqueur.
+    ...(formData.get("has_delivery_flag") ? { delivery_included: formData.get("delivery_included") === "on" } : {}),
     composition,
     images,
   };
@@ -211,6 +213,42 @@ export async function saveProduct(_prev: FormState, formData: FormData): Promise
   }
   refreshCatalog();
   redirect("/admin/produits");
+}
+
+/** Copie un produit (photos, formules, options comprises) en brouillon masqué : pratique pour créer un nouveau pack. */
+export async function duplicateProduct(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const id = z.string().uuid().parse(formData.get("id"));
+
+  const { data: src, error } = await supabase.from("products").select("*").eq("id", id).single();
+  if (error || !src) throw new Error("Produit introuvable.");
+
+  const { id: _omitId, created_at: _c, updated_at: _u, category: _cat, ...copy } = src as Record<string, unknown>;
+  void _omitId; void _c; void _u; void _cat;
+  const baseSlug = slugify(`${src.slug}-copie`);
+  let slug = baseSlug;
+  for (let i = 2; i < 50; i++) {
+    const { data: taken } = await supabase.from("products").select("id").eq("slug", slug).maybeSingle();
+    if (!taken) break;
+    slug = `${baseSlug}-${i}`;
+  }
+
+  const { data: created, error: insErr } = await supabase
+    .from("products")
+    .insert({ ...copy, slug, name: `${src.name} (copie)`, is_active: false, is_featured: false })
+    .select("id")
+    .single();
+  if (insErr || !created) throw new Error(insErr?.message ?? "Duplication impossible.");
+
+  const [{ data: variants }, { data: links }] = await Promise.all([
+    supabase.from("product_variants").select("name, description, price, is_recommended, sort_order").eq("product_id", id),
+    supabase.from("product_addons").select("addon_id").eq("product_id", id),
+  ]);
+  if (variants?.length) await supabase.from("product_variants").insert(variants.map((v) => ({ ...v, product_id: created.id })));
+  if (links?.length) await supabase.from("product_addons").insert(links.map((l) => ({ addon_id: l.addon_id, product_id: created.id })));
+
+  refreshCatalog();
+  redirect(`/admin/produits/${created.id}`);
 }
 
 export async function deleteProduct(formData: FormData) {

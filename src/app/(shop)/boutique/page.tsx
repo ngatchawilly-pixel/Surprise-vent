@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductCard } from "@/components/shop/product-card";
-import { getCategories, getProducts, type SortKey } from "@/lib/data";
+import { Icon, WhatsAppIcon } from "@/components/ui/icons";
+import { getCategories, getProducts, getSettings, type SortKey } from "@/lib/data";
+import { whatsappLink } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Boutique & packs surprises",
@@ -21,10 +23,12 @@ export default async function ShopPage({ searchParams }: { searchParams: SearchP
   const { categorie, q, tri } = await searchParams;
   const sort = SORTS.some((s) => s.value === tri) ? (tri as SortKey) : "popular";
 
-  const [categories, products] = await Promise.all([
+  const [categories, products, settings] = await Promise.all([
     getCategories(),
     getProducts({ category: categorie, q, sort }),
+    getSettings(),
   ]);
+  const customizable = categorie === "packs" || categorie === "paniers";
   const active = categories.find((c) => c.slug === categorie);
 
   const href = (params: { categorie?: string; q?: string; tri?: string }) => {
@@ -83,6 +87,25 @@ export default async function ShopPage({ searchParams }: { searchParams: SearchP
           <button className="btn btn-outline !min-h-11 !px-4" type="submit">OK</button>
         </form>
       </div>
+
+      {customizable && (
+        <div className="mt-6 flex flex-col items-start justify-between gap-3 rounded-2xl border border-gold/30 bg-warn-bg px-5 py-4 sm:flex-row sm:items-center">
+          <p className="flex items-start gap-3 text-sm text-warn-ink">
+            <Icon name="gift" size={20} className="mt-0.5 shrink-0" />
+            <span>
+              <strong>Sur mesure :</strong> nous pouvons confectionner votre {categorie === "paniers" ? "panier" : "pack"} en fonction de votre budget et de vos envies.
+            </span>
+          </p>
+          <a
+            href={whatsappLink(settings.whatsapp_number, `Bonjour Surprise évent & haid, je souhaite un ${categorie === "paniers" ? "panier" : "pack"} sur mesure. Mon budget est de … FCFA.`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-sm btn-wa-soft shrink-0"
+          >
+            <WhatsAppIcon size={18} /> Demander un devis
+          </a>
+        </div>
+      )}
 
       <p className="mt-6 text-sm text-ink-soft" aria-live="polite">
         {products.length} création{products.length > 1 ? "s" : ""}

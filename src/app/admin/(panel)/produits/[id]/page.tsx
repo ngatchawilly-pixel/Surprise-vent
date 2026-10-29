@@ -17,6 +17,10 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
     supabase.from("addons").select("*").order("sort_order"),
   ]);
 
+  // La colonne delivery_included n'existe qu'après la migration 0004 : on la détecte sur un produit existant.
+  const { data: probe } = await supabase.from("products").select("*").limit(1);
+  const hasDeliveryFlag = Boolean(probe?.[0] && "delivery_included" in probe[0]);
+
   let product: Product | null = null;
   let variants: Variant[] = [];
   let linkedAddons: string[] = [];
@@ -110,10 +114,16 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
           <label className="flex items-center gap-2"><input type="checkbox" name="is_active" defaultChecked={product?.is_active ?? true} className="h-4 w-4 accent-[var(--color-primary-container)]" /> Visible sur le site</label>
           <label className="flex items-center gap-2"><input type="checkbox" name="is_featured" defaultChecked={product?.is_featured} className="h-4 w-4 accent-[var(--color-primary-container)]" /> Coup de cœur (accueil)</label>
           <label className="flex items-center gap-2"><input type="checkbox" name="is_pack" defaultChecked={product?.is_pack} className="h-4 w-4 accent-[var(--color-primary-container)]" /> C&apos;est un pack</label>
+          {hasDeliveryFlag && (
+            <label className="flex items-center gap-2">
+              <input type="hidden" name="has_delivery_flag" value="1" />
+              <input type="checkbox" name="delivery_included" defaultChecked={product?.delivery_included} className="h-4 w-4 accent-[var(--color-primary-container)]" /> Déplacement inclus dans le prix (pas de frais de livraison)
+            </label>
+          )}
         </fieldset>
 
         <div>
-          <label htmlFor="composition" className="label">Composition du pack (une ligne par élément)</label>
+          <label htmlFor="composition" className="label">Composition du pack ou du panier (un élément par ligne)</label>
           <textarea id="composition" name="composition" className="input !min-h-28" defaultValue={product?.composition.join("\n")} />
         </div>
 

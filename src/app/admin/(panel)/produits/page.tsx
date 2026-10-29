@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { toggleProduct } from "@/actions/admin";
+import { duplicateProduct, toggleProduct } from "@/actions/admin";
 import { requireAdmin } from "@/lib/auth";
 import { STOCK_LABEL, STOCK_STYLE, formatFcfa } from "@/lib/format";
 import type { Product } from "@/lib/types";
@@ -45,7 +45,13 @@ export default async function AdminProductsPage() {
                     </button>
                   </form>
                 </td>
-                <td className="p-3 text-right"><Link href={`/admin/produits/${p.id}`} className="btn btn-ghost !min-h-9 !px-3 !py-1">Modifier</Link></td>
+                <td className="whitespace-nowrap p-3 text-right">
+                  <Link href={`/admin/produits/${p.id}`} className="btn btn-ghost !min-h-9 !px-3 !py-1">Modifier</Link>
+                  <form action={duplicateProduct} className="inline">
+                    <input type="hidden" name="id" value={p.id} />
+                    <button className="btn btn-ghost !min-h-9 !px-3 !py-1" title="Créer une copie masquée à modifier" aria-label={`Dupliquer ${p.name}`}>Dupliquer</button>
+                  </form>
+                </td>
               </tr>
             ))}
           </tbody>

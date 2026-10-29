@@ -15,6 +15,8 @@ export interface CartLine {
   /** Prix unitaire affiché (options comprises). Le serveur le recalcule à la commande. */
   unitPrice: number;
   quantity: number;
+  /** Le déplacement est compris dans le prix de cet article. */
+  deliveryIncluded?: boolean;
   addons: { id: string; name: string; price: number }[];
   customization: Customization;
 }

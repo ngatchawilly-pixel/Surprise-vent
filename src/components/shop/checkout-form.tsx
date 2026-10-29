@@ -87,7 +87,9 @@ export function CheckoutForm({ zones, settings }: Props) {
   const zone = cityZones.find((z) => z.district === district) ?? cityZones.find((z) => z.is_other) ?? null;
 
   const subtotal = cartSubtotal(lines);
-  const deliveryFee = zone?.fee ?? 0;
+  // Packs « déplacement inclus » : pas de frais si tout le panier est dans ce cas (même règle que create_order).
+  const deliveryIncluded = lines.length > 0 && lines.every((l) => l.deliveryIncluded);
+  const deliveryFee = deliveryIncluded ? 0 : (zone?.fee ?? 0);
   const expressFee = express ? settings.express_fee : 0;
   const discount = promo ? Math.min(promo.discount, subtotal) : 0;
   const total = subtotal - discount + deliveryFee + expressFee;
@@ -239,7 +241,7 @@ export function CheckoutForm({ zones, settings }: Props) {
                 </button>
               ))}
             </div>
-            {zone && <p className="mt-2 text-xs text-ink-soft">Frais de livraison : {formatFcfa(zone.fee)}</p>}
+            {zone && <p className="mt-2 text-xs text-ink-soft">{deliveryIncluded ? "Déplacement inclus dans le prix de votre pack." : `Frais de livraison : ${formatFcfa(zone.fee)}`}</p>}
             {err("delivery.district") && <p role="alert" className="mt-1 text-xs font-semibold text-danger">{err("delivery.district")}</p>}
           </fieldset>
 
@@ -346,7 +348,7 @@ export function CheckoutForm({ zones, settings }: Props) {
           <dl className="mt-4 space-y-2 border-t border-surface-container pt-4 text-sm">
             <div className="flex justify-between"><dt className="text-ink-soft">Sous-total</dt><dd>{formatFcfa(subtotal)}</dd></div>
             {discount > 0 && <div className="flex justify-between text-ok"><dt>Remise</dt><dd>− {formatFcfa(discount)}</dd></div>}
-            <div className="flex justify-between"><dt className="text-ink-soft">Livraison {zone ? `(${zone.district})` : ""}</dt><dd>{zone ? formatFcfa(deliveryFee) : "—"}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink-soft">Livraison {zone ? `(${zone.district})` : ""}</dt><dd>{deliveryIncluded ? "Inclus" : zone ? formatFcfa(deliveryFee) : "—"}</dd></div>
             {expressFee > 0 && <div className="flex justify-between"><dt className="text-ink-soft">Supplément express</dt><dd>{formatFcfa(expressFee)}</dd></div>}
             <div className="flex items-end justify-between border-t border-surface-container pt-3">
               <dt className="font-semibold">Total</dt>
